@@ -1,0 +1,41 @@
+Candidate Name: Athula chandrawansha
+Phone: 071-5496663
+Email: caathu@gmail.com
+
+1.1
+normalize done. 
+run app after changing connection string on app setting.json for crate and migrate db
+microsoft sql server 2019 used as dbms, .net core 5 use for app
+
+1.2
+select su.Name, AVG(m.Marks) as AverageMarks from Marks m
+inner join TeacherSubjects ts on ts.Id = m.TeacherSubjectId
+inner join [Subjects] su on su.Id = ts.SubjectId
+where su.Name = 'art'
+group by su.Name
+
+1.3
+select sc.Name, AVG(m.Marks) as AverageMarks from Marks m
+inner join TeacherSubjects ts on ts.Id = m.TeacherSubjectId
+inner join [Subjects] su on su.Id = ts.SubjectId
+inner join Students st on st.Id = m.StudentId
+inner join Schools sc on sc.Id = st.SchoolId
+where su.Name = 'maths'
+group by sc.Name
+
+1.4
+select sc.Name, su.Name, COUNT(st.Name) as StudentCount from Marks m
+inner join TeacherSubjects ts on ts.Id = m.TeacherSubjectId
+inner join [Subjects] su on su.Id = ts.SubjectId
+inner join Students st on st.Id = m.StudentId
+inner join Schools sc on sc.Id = st.SchoolId
+group by sc.Name, su.Name
+
+1.5
+select sc.Name, ((case when (AVG(m.Marks)>=75) then 1 else 0 end)/(count(m.Id))) * 100 as Pass
+from Marks m
+inner join TeacherSubjects ts on ts.Id = m.TeacherSubjectId
+inner join [Subjects] su on su.Id = ts.SubjectId
+inner join Students st on st.Id = m.StudentId
+inner join Schools sc on sc.Id = st.SchoolId
+group by  sc.Name

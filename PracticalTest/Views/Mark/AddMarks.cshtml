@@ -1,0 +1,195 @@
+﻿
+@{
+    Layout = "_Layout";
+}
+
+<div class="row" id="app">
+    <div class="col-md-8">
+        <table id="example" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>School</th>
+                    <th>Address</th>
+                    <th>Student</th>
+                    <th>Dob</th>
+                    <th>Grade</th>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Teacher</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="col-md-4">
+        <h1>Add Marks</h1>
+        <form>
+            <div class="form-group">
+                <label for="formGroupExampleInput">Grade</label>
+                <select v-on:change="GetStudents()" v-model="markInputModel.gradeId" class="form-control">
+                    <option disabled value="">Please select</option>
+                    <option v-for="grade in grades" v-bind:value="grade.id">{{grade.name}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="formGroupExampleInput2">Student</label>
+                <select v-model="markInputModel.studentId" class="form-control">
+                    <option disabled value="">Please select</option>
+                    <option v-for="student in students" v-bind:value="student.id">{{student.name}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="formGroupExampleInput2">Subject</label>
+                <select v-on:change="GetTeachersBySubject()" v-model="markInputModel.subjectId" class="form-control">
+                    <option disabled value="">Please select</option>
+                    <option v-for="subject in subjects" v-bind:value="subject.id">{{subject.name}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="formGroupExampleInput2">Teach By</label>
+                <select v-model="markInputModel.teacherId" class="form-control">
+                    <option disabled value="">Please select</option>
+                    <option v-for="teacher in teachers" v-bind:value="teacher.id">{{teacher.name}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="formGroupExampleInput2">Marks</label>
+                <input v-model="markInputModel.marks" type="number" class="form-control" id="formGroupExampleInput2" placeholder="Another input">
+            </div>
+            <br />
+            <div class="form-group">
+                <button v-on:click="Save" type="button" class="btn btn-primary">Save</button>
+                <button v-on:click="ResetInput" type="button" class="btn btn-danger">Clear</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+
+
+    <script>       
+        $(document).ready(function () {
+           
+        });
+       
+        var vueApp = new Vue({
+            el: '#app',
+            data: {               
+                markInputModel: {
+                    gradeId: 0,
+                    studentId: 0,
+                    subjectId: 0,
+                    teacherId: 0,
+                    marks: 0,
+                    teacherSubjectId: 0,
+                },
+                grades: [],
+                students: [],
+                subjects: [],
+                teachers: [],
+                alldata: [],
+            },
+            mounted: function (event) {
+                this.GetAll();
+                this.GetAllGrade();               
+                this.GetSubjects();
+            },
+            methods: {
+                ResetInput() {
+                    this.markInputModel.gradeId = 0;
+                    this.markInputModel.studentId = 0;
+                    this.markInputModel.subjectId = 0;
+                    this.markInputModel.teacherId = 0;
+                    this.markInputModel.marks = 0;
+                    this.markInputModel.teacherSubjectId = 0;
+                },
+
+                GetTeachersBySubject: function () {
+                    this.teacherSubjectId = 
+
+                    axios.get('/Subject/GetTeachBySubjectId', {
+                        params: { subjectId: this.markInputModel.subjectId }
+                    })
+                        .then((response) => {
+                            this.teachers = response;
+                        });
+                },
+
+                GetSubjects: function () {
+                    axios.get('/Subject/GetAll')
+                        .then((response) => {
+                            this.subjects = response;
+                        });
+                },
+
+                GetStudents: function () {
+                    axios.get('/Student/GetByGrade', {
+                        params: { gradeId: this.markInputModel.gradeId }
+                    })
+                        .then((response) => {
+                            this.students = response;
+                        });
+                },
+
+
+                GetAllGrade: function () {
+                    axios.get('/Grade/GetAll')
+                        .then((response) => {
+                            this.grades = response;                                                 
+                        });
+                },        
+              
+                GetAll: function () {
+                    axios.get('/Mark/GetMarks')
+                        .then((response) => {                           
+                            var data = [];
+                            $.each(response, function (index, value) {
+                                var obj = {
+                                    "school": value.student.school.name,
+                                    "address": value.student.school.address,
+                                    "student": value.student.name,
+                                    "dob": value.student.dob,
+                                    "grade": value.student.grade.name,
+                                    "subject": value.teacherSubject.subject.name,
+                                    "marks": value.marks,
+                                    "teacher": value.teacherSubject.teacher.name
+                                };
+                                data.push(obj);
+                            });
+
+                            $('#example').dataTable().fnClearTable();
+                            $('#example').dataTable().fnDestroy();
+                            $('#example').DataTable({
+                                    data: data,
+                                    columns: [
+                                        { "data": "school" },
+                                        { "data": "address" },
+                                        { "data": "student" },
+                                        { "data": "dob" },
+                                        { "data": "grade" },
+                                        { "data": "subject" },
+                                        { "data": "marks" },
+                                        { "data": "teacher" },
+                                    ],
+                                    pageLength: 6,
+                                    lengthMenu: [[6, 12, -1], [6, 12, 'All']]
+                                });                         
+                        });               
+                },
+                             
+
+                Save: function () {
+                    const mark = this.markInputModel;
+                    axios.post("/Mark/SaveMarks", mark)
+                        .then(response => {
+                            this.GetAll();
+                            this.ResetInput();
+                        });
+                },
+            }
+        })
+    </script>
+
+}
